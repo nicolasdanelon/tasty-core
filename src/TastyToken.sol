@@ -117,7 +117,7 @@ contract TastyToken is ERC721URIStorage {
             if (tastyToSell.tokenId == _tokenId) {
                 require(
                     msg.value >= tastyToSell.price,
-                    "The price is higher than the amon you sent"
+                    "The price is higher than the amount you sent"
                 );
                 if (tastyToSell.price < msg.value) {
                     uint256 amountToReturn = msg.value - tastyToSell.price;
