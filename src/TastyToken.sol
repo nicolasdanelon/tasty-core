@@ -54,7 +54,7 @@ contract TastyToken is ERC721URIStorage {
     constructor() ERC721("TastyToken", "TTKT") {}
 
     function reserve(
-        uint8 perdiodToReserve,
+        uint8 periodToReserve,
         uint8 day,
         uint8 month
     ) external payable returns (uint256) {
@@ -63,7 +63,7 @@ contract TastyToken is ERC721URIStorage {
             "Your amount is outside of the limits"
         );
         require(
-            perdiodToReserve >= 0 && perdiodToReserve <= 4,
+            periodToReserve >= 0 && periodToReserve <= 4,
             "The period is out of the limits"
         );
         string memory keyOfReserve = string.concat(
@@ -71,16 +71,16 @@ contract TastyToken is ERC721URIStorage {
             Strings.toString(month)
         );
         require(
-            countOfReserves[perdiodToReserve][keyOfReserve] <= 20,
+            countOfReserves[periodToReserve][keyOfReserve] <= 20,
             "There is not more space to reserve"
         );
-        countOfReserves[perdiodToReserve][keyOfReserve] =
-            countOfReserves[perdiodToReserve][keyOfReserve] +
+        countOfReserves[periodToReserve][keyOfReserve] =
+            countOfReserves[periodToReserve][keyOfReserve] +
             1;
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
         tokenMetadata[newItemId] = TastyTokenData(
-            perdiodToReserve,
+            periodToReserve,
             day,
             month,
             msg.value,
@@ -104,7 +104,7 @@ contract TastyToken is ERC721URIStorage {
         ticketsToSell.push(tastyToSell);
     }
 
-    function ofert(uint256 _tokenId) external payable {
+    function offer(uint256 _tokenId) external payable {
         TastyTokenData memory data = tokenMetadata[_tokenId];
         require(data.period != 0, "The token Id does not exist");
         require(
