@@ -15,7 +15,8 @@ import "forge-std/console.sol";
 contract TastyToken is ERC721URIStorage {
     enum ReservStatus {
         RESERVED,
-        TAKED
+        TAKED,
+        TOSELL
     }
 
     struct TastyTokenData {
@@ -24,6 +25,11 @@ contract TastyToken is ERC721URIStorage {
         uint8 month;
         uint256 amountDeposited;
         ReservStatus status;
+    }
+    struct TastyToSell {
+        uint256 price;
+        uint256 tokenId;
+        TastyTokenData tasty;
     }
 
     using Counters for Counters.Counter;
@@ -42,6 +48,8 @@ contract TastyToken is ERC721URIStorage {
     mapping(uint8 => mapping(string => uint8)) public countOfReserves;
     // mapping(address => uint256) countOfReserves;
     mapping(uint256 => TastyTokenData) public tokenMetadata;
+
+    TastyToSell[] public ticketsToSell;
 
     constructor() ERC721("TastyToken", "TTKT") {}
 
@@ -80,6 +88,50 @@ contract TastyToken is ERC721URIStorage {
         );
         _tokenIds.increment();
         return newItemId;
+    }
+
+    uint256[] myArray;
+
+    function sellTicket(uint256 _tokenId, uint256 _price) external {
+        TastyTokenData memory data = tokenMetadata[_tokenId];
+
+        require(data.period != 0, "The token Id does not exist");
+
+        data.status = ReservStatus.TOSELL;
+        tokenMetadata[_tokenId] = data;
+        TastyToSell memory tastyToSell = TastyToSell(_price, _tokenId, data);
+
+        ticketsToSell.push(tastyToSell);
+    }
+
+    function ofert(uint256 _tokenId) external payable {
+        TastyTokenData memory data = tokenMetadata[_tokenId];
+        require(data.period != 0, "The token Id does not exist");
+        require(
+            data.status == ReservStatus.TOSELL,
+            "The Ticket is not to sell"
+        );
+
+        for (uint256 index = 0; index < ticketsToSell.length; index++) {
+            TastyToSell memory tastyToSell = ticketsToSell[index];
+            if (tastyToSell.tokenId == _tokenId) {
+                require(
+                    msg.value >= tastyToSell.price,
+                    "The price is higher than the amon you sent"
+                );
+                if (tastyToSell.price < msg.value) {
+                    uint256 amountToReturn = msg.value - tastyToSell.price;
+                    (bool sent, ) = msg.sender.call{value: amountToReturn}("");
+                    require(sent, "Failed to send Ether");
+                    data.status = ReservStatus.RESERVED;
+                    address actualOwner = _ownerOf(_tokenId);
+                    _safeTransfer(actualOwner, msg.sender, _tokenId, "0x");
+                    delete ticketsToSell[index];
+
+                    break;
+                }
+            }
+        }
     }
 
     function receivePerson(uint256 _tokenId) external {

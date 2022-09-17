@@ -140,6 +140,27 @@ contract TastyTokenTest is Test {
         assertEq(newBalance > prevBalance, true);
     }
 
+    function testSellTicket() public {
+        tastyToken.ownerDepositFound{value: 10 ether}();
+
+        uint256 newItemId = tastyToken.reserve{value: 0.01 ether}(2, 31, 4);
+
+        // assertEq(.length, 1);
+    }
+
+    function testOferTicket() public {
+        tastyToken.ownerDepositFound{value: 10 ether}();
+
+        uint256 newItemId = tastyToken.reserve{value: 0.01 ether}(2, 31, 4);
+        tastyToken.sellTicket(newItemId, 0.02 ether);
+        vm.prank(address(1));
+        deal(address(1), 10000e18);
+        tastyToken.ofert{value: 0.05 ether}(newItemId);
+        address me = tastyToken.ownerOf(newItemId);
+
+        assertEq(me, address(1));
+    }
+
     receive() external payable {}
 
     fallback() external payable {}
